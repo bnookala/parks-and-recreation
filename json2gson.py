@@ -12,14 +12,12 @@ def json2gson():
         json.dump(park_data, gson_file)
 
 def format_json_to_gson(data):
-    map_data = {
-        "id": "bnookala.ia5763g5",
-        "type": "FeatureCollection",
-        "features": [],
-    }
+    map_data = []
+    outliers = []
 
     for index, row in enumerate(data):
         marker = {
+            "type": "Feature",
             "geometry": {
                 "coordinates": [],
                 "type": "Point"
@@ -44,12 +42,43 @@ def format_json_to_gson(data):
         longitude = address[2]
 
         if not latitude or not longitude:
+            outliers.append(row)
             continue
 
         marker["properties"]["title"] = name
+        marker["properties"]["description"] = row[9]
         marker["geometry"]["coordinates"] = [float(longitude), float(latitude)]
 
-        map_data["features"].append(marker)
+        map_data.append(marker)
+
+    for outlier in outliers:
+        name = outlier[8]
+
+        marker = {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [],
+                "type": "Point"
+            },
+            "properties": {
+                "description": "",
+                "marker-color": "#1087bf",
+                "marker-size": "medium",
+                "marker-symbol": "garden",
+                "title": ""
+            }
+        }
+
+        latitude, longitude = json.loads(outlier[7])['invalidCells']['1685357'].split('(')[1][:-1].split(',')
+
+        if not latitude or not longitude:
+            continue
+
+        marker["properties"]["title"] = name
+        marker["properties"]["description"] = outlier[9]
+        marker["geometry"]["coordinates"] = [float(longitude), float(latitude)]
+
+        map_data.append(marker)
 
     return map_data
 
